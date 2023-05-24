@@ -1,5 +1,5 @@
 # novocaged
-Downloading and decoding novocaged
+Downloading and decoding NOVOCAGED
 
 This code aims to download and prepare the NOVOCAGED files to be used in descriptive statistics.
 
