@@ -2,57 +2,75 @@
 
 #install.packages(c("tidyverse", "archive", "curl"))
 
-# 1 futuramente criar a pasta tbem e definir local de trab automaticmanete
-# 2 verficar se existe o arquivo no computador e analisar apartir de que parte
-# deve começar o dowload a leitura seria bom fazer integralmente
-# 3 argumentos da função  ano mes atualização
 # 4 usar forcats
 
-setwd("Z:/POWER BI/NOVOCAGED")
+setwd("Z:/rstudio/novocaged")
+
 dir.create("data")
+
 # Defining variable parts in the possible universe links
 
 competencias <- c('MOV', 'FOR', 'EXC')
-anos <- 2020:2023  # futuramente analisar anos disponiveis no site automáticamente
+anos <- 2020:as.integer(lubridate::year(lubridate::today()))
 meses <- formatC(1:12, width = 2, flag = '0')
 
-## Applying command Loop to download plain text files
-## Run this code part only once ##
+# comparing if there are files already
 
-for(i in seq_along(competencias)){
- 
-  for(j in seq_along(anos)){
-   
-    for(k in seq_along(meses)){
-     
-      cat(competencias[i], anos[j], 'mês', meses[k], '\n')
-     
-      tryCatch({
-        curl::curl_download(
-          paste0("ftp://ftp.mtps.gov.br/pdet/microdados/NOVO%20CAGED/",
-                 anos[j], '/', anos[j], meses[k],
-                 "/CAGED", competencias[i], anos[j],
-                 meses[k],
-                 ".7z"),
-          quiet = TRUE,
-          destfile = paste0("data/CAGED", competencias[i], anos[j], meses[k], '.7z'))
-      }, error = function(err) { warning("file could not be downloaded") })
-    }}}
+vetor_comparacao <- vector(mode = 'list', length = (length(competencias) *
+                                                      length(anos) *
+                                                      length(meses)))
+counter <- 1  # Initialize a counter variable
+
+for(i in seq_along(competencias)) {
+  
+  for(j in seq_along(anos)) {
+    
+    for(k in seq_along(meses)) {
+      
+      vetor_comparacao[[counter]] <-
+        paste0("CAGED", competencias[i], anos[j], meses[k], ".7z")
+      
+      counter <- counter + 1  # Increment the counter
+    }
+  }
+}
+
+vetor_comparacao <- vetor_comparacao |> unlist()
+
+diretorio_comparacao <- paste0(getwd(),"/data") |> dir()
+
+vetor_download <- vetor_comparacao[!vetor_comparacao %in% diretorio_comparacao]
+
+# Applying command Loop to download plain text files
+
+for(i in seq_along(vetor_download)){
+  
+  tryCatch({
+    curl::curl_download(
+      paste0("ftp://ftp.mtps.gov.br/pdet/microdados/NOVO%20CAGED/",
+             stringr::str_extract(vetor_download[i], "\\d{4}"), "/", # year
+             stringr::str_extract(vetor_download[i], "\\d{6}"), "/", # yearmonth
+             vetor_download[i]), # file name
+      quiet = T,
+      destfile = paste0("data/", vetor_download[i]))
+  }, error = function(err) {warning("file could not be downloaded")})
+}
 
 # Reading and unifying files of same nature
 
-# creating a vector of same nature file
 setwd('data')
 
+# creating a vector of same nature file
+
 for(k in seq_along(competencias)){
- 
+  
   # cagedxxx_baixadas <- fs::dir_ls(glob = "CAGEDXXX*.7z$")
- 
+  
   assign(tolower(paste0('caged', competencias[k], '_baixadas')),
          fs::dir_ls(glob = paste0('CAGED', competencias[k], '*.7z$')))
- 
+  
   # cagedxxx_lista <- list()
- 
+  
   assign(tolower(paste0('caged', competencias[k], '_lista')),
          list())
 }
@@ -61,17 +79,17 @@ for(k in seq_along(competencias)){
 
 arquivos_caged <-
   function(entrada) {
-   
+    
     if(!any(entrada == c('MOV', 'FOR', 'EXC'))) {
       stop("Competencia deve ser FOR, MOV ou EXC", call. = FALSE)
     }
-   
+    
     caminho_dos_arquivos <- get(paste0('caged', tolower(entrada), '_baixadas'))
     lista_arquivos_periodo <- vector(mode = 'list',
                                      length = length(caminho_dos_arquivos))
-   
+    
     for(l in seq_along(caminho_dos_arquivos)) {
-     
+      
       lista_arquivos_periodo[[l]] <-
         readr::read_csv2(archive::archive_read(caminho_dos_arquivos[l]),
                          col_select = !c("região", "seção",
@@ -86,13 +104,13 @@ arquivos_caged <-
                            .default = readr::col_character()
                          )
         ) |>
-      #janitor::clean_names() |>
-      dplyr::filter(uf == 51)
+        
+      dplyr::filter(uf == 51) # make the file ligther
     }
-   
+    
     names(lista_arquivos_periodo) <-
       gsub('.7z', '', as.character(caminho_dos_arquivos))
-   
+    
     return(lista_arquivos_periodo)
   }
 
@@ -111,20 +129,19 @@ novocaged <-
   cagedmov |> dplyr::bind_rows(cagedfor) |>
   dplyr::anti_join(cagedexc)
 
-novocaged |> dplyr::glimpse()
-
 # Decoder download
 ## run this code part only once ##
 
-url_dicionario <- paste0("ftp://ftp.mtps.gov.br/pdet/microdados/NOVO%20CAGED/",
-                         "Layout%20N%E3o-identificado%20Novo%20Caged%20Movimenta%E7%E3o.xlsx")
+url_dicionario <- 
+  paste0("ftp://ftp.mtps.gov.br/pdet/microdados/NOVO%20CAGED/",
+         "Layout%20N%E3o-identificado%20Novo%20Caged%20Movimenta%E7%E3o.xlsx")
 
 curl::curl_download(url_dicionario, destfile = "layout.xlsx")
 
 # building the decoder
 
 # exploring the existing variables in the decode
-folhas_tradutor <- "layout.xlsx" |> readxl::excel_sheets() #|> janitor::make_clean_names()
+folhas_tradutor <- "layout.xlsx" |> readxl::excel_sheets()
 
 # exploring the existing variables in novocaged file
 conteudo_asertraduzido <- novocaged |> names()
@@ -141,7 +158,7 @@ nomes_atraduzir <- nomes_atraduzir |> unlist()
 
 # creating a list with every sheets of the decoder
 for(l in seq_along(nomes_atraduzir)){
- 
+  
   lista_tradutor[[l]] <-
     readxl::read_excel("layout.xlsx", sheet = nomes_atraduzir[[l]],
                        col_types = "text")
@@ -149,7 +166,8 @@ for(l in seq_along(nomes_atraduzir)){
 
 # renaming the variables in the decoder to be compatible with novocaged file
 
-lista_tradutor_renomeada <- vector(mode = "list", length = length(lista_tradutor))
+lista_tradutor_renomeada <- 
+  vector(mode = "list", length = length(lista_tradutor))
 
 ##### debugging with chat gpt code  using tidyverse
 
@@ -262,8 +280,6 @@ novocaged_decodificado <- novocaged_decodificado |>
                     valorsaláriofixo > 24240 ~ "Maior que R$ 24.240,00"
                   ), .keep = "all"
   )
-
-novocaged_decodificado |> dplyr::glimpse()
 
 # Sorting data demo (to use in novocaged)
 
@@ -383,17 +399,15 @@ novocaged_decodificado <- novocaged_decodificado |>
                   ), .keep = "all"
   )
 
-novocaged_decodificado |> dplyr::glimpse()
-
 # Using the particular produce decoder to adding more information in the novocaged
 
-# accessing compiled information
+# accessing compiled information <verificar se consigo por link de download>
 
 "compilado_decodificador.xlsx" |> readxl::excel_sheets()
 
 # reading, selecting and merging variables about a teme
 
-territorialidade_sedec <-
+territorialidade_sedec <- 
   readxl::read_excel("compilado_decodificador.xlsx",
                      sheet =  "territorialidade", col_types = "text") |>
   dplyr::select("territorio_municipio_codigo_7d",
@@ -402,34 +416,34 @@ territorialidade_sedec <-
                 "territorio_rpseplan10340_decodificado",
                 "territorio_latitude", "territorio_longitude")
 
-novocaged_decodificado <- novocaged_decodificado |>
+novocaged_decodificado <- novocaged_decodificado |> 
   dplyr::left_join(territorialidade_sedec,
                    by = dplyr::join_by(município == territorio_municipionovocaged_codigo_6d))
 
 # reading, selecting and merging variables about a teme
 
-cnae_sedec <-
+cnae_sedec <- 
   readxl::read_excel("compilado_decodificador.xlsx",
                      sheet =  "cnae", col_types = "text") |> #dplyr::glimpse()
   dplyr::select("cnae_subclasse_codigo_7d",
                 "cnae_secao_decodificado",
                 "cnae_classificacaosedec_decodificado")
 
-novocaged_decodificado <- novocaged_decodificado |>
+novocaged_decodificado <- novocaged_decodificado |> 
   dplyr::left_join(cnae_sedec,
                    by = dplyr::join_by(subclasse == cnae_subclasse_codigo_7d))
 
 # reading, selecting and merging variables about a teme
 
-cbo2002_sedec <-
+cbo2002_sedec <- 
   readxl::read_excel("compilado_decodificador.xlsx",
                      sheet = "cbo2002", col_types = "text") |> #dplyr::glimpse()
   dplyr::select("cbo_ocupacao_codigo_6d",
                 "cbo_grandegrupo_decodificado")
 
-novocaged_decodificado <- novocaged_decodificado |>
+novocaged_decodificado <- novocaged_decodificado |> 
   dplyr::left_join(cbo2002_sedec,
-                   by = dplyr::join_by(cbo2002ocupação == cbo_ocupacao_codigo_6d),
+                   by = dplyr::join_by(cbo2002ocupação == cbo_ocupacao_codigo_6d), 
                                        multiple = "any")
 
 # Novocaged with additional particular produce information
@@ -450,7 +464,7 @@ novocaged_decodificado <- novocaged_decodificado |>
 
 nome_arquivo_csv <- "novocaged_decodificado"
 
-caminho_arquivo <- paste0("Z:/POWER BI/NOVOCAGED/",
+caminho_arquivo <- paste0(stringr::str_remove(getwd(), "data$"),
                           nome_arquivo_csv, ".txt")
 
 readr::write_csv2(novocaged_decodificado,
