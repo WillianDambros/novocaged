@@ -4,7 +4,7 @@
 
 # 4 usar forcats
 
-setwd("Z:/rstudio/novocaged")
+setwd("D:/novocaged")
 
 dir.create("data")
 
@@ -105,7 +105,7 @@ arquivos_caged <-
                          )
         ) |>
         
-      dplyr::filter(uf == 51) # make the file ligther
+        dplyr::filter(uf == 51) # make the file ligther
     }
     
     names(lista_arquivos_periodo) <-
@@ -426,12 +426,13 @@ cnae_sedec <-
   readxl::read_excel("compilado_decodificador.xlsx",
                      sheet =  "cnae", col_types = "text") |> #dplyr::glimpse()
   dplyr::select("cnae_subclasse_codigo_7d",
+                "cnae_subclasse_codigo_7d_sem0",
                 "cnae_secao_decodificado",
                 "cnae_classificacaosedec_decodificado")
 
 novocaged_decodificado <- novocaged_decodificado |> 
   dplyr::left_join(cnae_sedec,
-                   by = dplyr::join_by(subclasse == cnae_subclasse_codigo_7d))
+                   by = dplyr::join_by(subclasse == cnae_subclasse_codigo_7d_sem0))
 
 # reading, selecting and merging variables about a teme
 
@@ -444,7 +445,7 @@ cbo2002_sedec <-
 novocaged_decodificado <- novocaged_decodificado |> 
   dplyr::left_join(cbo2002_sedec,
                    by = dplyr::join_by(cbo2002ocupação == cbo_ocupacao_codigo_6d), 
-                                       multiple = "any")
+                   multiple = "any")
 
 # Novocaged with additional particular produce information
 
@@ -468,4 +469,4 @@ caminho_arquivo <- paste0(stringr::str_remove(getwd(), "data$"),
                           nome_arquivo_csv, ".txt")
 
 readr::write_csv2(novocaged_decodificado,
-                 caminho_arquivo)
+                  caminho_arquivo)
