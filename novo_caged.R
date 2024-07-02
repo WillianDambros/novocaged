@@ -470,3 +470,28 @@ caminho_arquivo <- paste0(stringr::str_remove(getwd(), "data$"),
 
 readr::write_csv2(novocaged_decodificado,
                   caminho_arquivo)
+
+
+# writing PostgreSQL
+
+conexao <- RPostgres::dbConnect(RPostgres::Postgres(),
+                                dbname = "###########",
+                                host = "############",
+                                port = "############",
+                                user = "############",
+                                password = "##############")
+
+RPostgres::dbListTables(conexao)
+
+schema_name <- "novo_caged"
+
+table_name <- "novo_caged"
+
+DBI::dbSendQuery(conexao, paste0("CREATE SCHEMA IF NOT EXISTS ", schema_name))
+
+RPostgres::dbWriteTable(conexao,
+                        name = DBI::Id(schema = schema_name,table = table_name),
+                        value = novocaged_decodificado,
+                        row.names = FALSE, overwrite = TRUE)
+
+RPostgres::dbDisconnect(conexao)
