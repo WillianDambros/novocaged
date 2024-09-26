@@ -4,7 +4,7 @@
 
 # 4 usar forcats
 
-setwd("D:/novocaged")
+setwd("X:/POWER BI/NOVOCAGED")
 
 dir.create("data")
 
@@ -401,19 +401,26 @@ novocaged_decodificado <- novocaged_decodificado |>
 
 # Using the particular produce decoder to adding more information in the novocaged
 
-# accessing compiled information <verificar se consigo por link de download>
+compilado_decodificador_endereço <-
+  paste0("https://github.com/WillianDambros/data_source/",
+         "raw/main/compilado_decodificador.xlsx")
+
+decodif0icador_endereco <- paste0(getwd(), "/compilado_decodificador.xlsx")
+
+curl::curl_download(compilado_decodificador_endereço,
+                    decodificador_endereco)
 
 "compilado_decodificador.xlsx" |> readxl::excel_sheets()
 
-# reading, selecting and merging variables about a teme
-
 territorialidade_sedec <- 
   readxl::read_excel("compilado_decodificador.xlsx",
-                     sheet =  "territorialidade", col_types = "text") |>
+                     sheet =  "territorialidade_municipios_mt",
+                     col_types = "text") |>
   dplyr::select("territorio_municipio_codigo_7d",
                 "territorio_municipionovocaged_codigo_6d",
-                "territorio_rpseplan10340cidade_decodificado",
-                "territorio_rpseplan10340_decodificado",
+                "rpseplan10340_munícipio_polo_decodificado",
+                "rpseplan10340_regiao_decodificado",
+                "imeia_regiao",
                 "territorio_latitude", "territorio_longitude")
 
 novocaged_decodificado <- novocaged_decodificado |> 
@@ -425,10 +432,10 @@ novocaged_decodificado <- novocaged_decodificado |>
 cnae_sedec <- 
   readxl::read_excel("compilado_decodificador.xlsx",
                      sheet =  "cnae", col_types = "text") |> #dplyr::glimpse()
-  dplyr::select("cnae_subclasse_codigo_7d",
-                "cnae_subclasse_codigo_7d_sem0",
+  dplyr::select("cnae_subclasse_codigo_7d_sem0",
                 "cnae_secao_decodificado",
-                "cnae_classificacaosedec_decodificado")
+                "cnae_atividades_caracteristicas_turismo",
+                "cnae_grande_grupamento_novocaged")
 
 novocaged_decodificado <- novocaged_decodificado |> 
   dplyr::left_join(cnae_sedec,
@@ -460,26 +467,24 @@ numeric_columns <- novocaged_decodificado |>
 novocaged_decodificado <- novocaged_decodificado |>
   dplyr::mutate(across(all_of(numeric_columns), ~tidyr::replace_na(.x, 0)))
 
-
 # Writing novocaged file (estudar incluir o caminho doa rquivo direto na formula)
 
-nome_arquivo_csv <- "novocaged_decodificado"
+#nome_arquivo_csv <- "novocaged_decodificado"
 
-caminho_arquivo <- paste0(stringr::str_remove(getwd(), "data$"),
-                          nome_arquivo_csv, ".txt")
+#caminho_arquivo <- paste0(stringr::str_remove(getwd(), "data$"),
+#                          nome_arquivo_csv, ".txt")
 
-readr::write_csv2(novocaged_decodificado,
-                  caminho_arquivo)
-
+#readr::write_csv2(novocaged_decodificado,
+#                  caminho_arquivo)
 
 # writing PostgreSQL
 
 conexao <- RPostgres::dbConnect(RPostgres::Postgres(),
-                                dbname = "###########",
-                                host = "############",
-                                port = "############",
-                                user = "############",
-                                password = "##############")
+                                dbname = "#######",
+                                host = "##########",
+                                port = "#########",
+                                user = "#########",
+                                password = "############")
 
 RPostgres::dbListTables(conexao)
 
