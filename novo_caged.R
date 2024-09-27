@@ -418,6 +418,7 @@ territorialidade_sedec <-
                      col_types = "text") |>
   dplyr::select("territorio_municipio_codigo_7d",
                 "territorio_municipionovocaged_codigo_6d",
+                "rpseplan10340_munícipio_polo_decodificado",
                 "rpseplan10340_regiao_decodificado",
                 "imeia_regiao",
                 "imeia_municipios_polo_economico",
@@ -480,11 +481,11 @@ novocaged_decodificado <- novocaged_decodificado |>
 # writing PostgreSQL
 
 conexao <- RPostgres::dbConnect(RPostgres::Postgres(),
-                                dbname = "##########",
-                                host = "##########",
-                                port = "########",
-                                user = "#########",
-                                password = "##########")
+                                dbname = "observatorio_db",
+                                host = "10.43.88.8",
+                                port = "5502",
+                                user = "admin",
+                                password = "adminadmin")
 
 RPostgres::dbListTables(conexao)
 
