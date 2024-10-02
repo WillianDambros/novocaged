@@ -481,11 +481,11 @@ novocaged_decodificado <- novocaged_decodificado |>
 # writing PostgreSQL
 
 conexao <- RPostgres::dbConnect(RPostgres::Postgres(),
-                                dbname = "observatorio_db",
-                                host = "10.43.88.8",
-                                port = "5502",
-                                user = "admin",
-                                password = "adminadmin")
+                                dbname = "#########",
+                                host = "#########",
+                                port = "###########",
+                                user = "##########",
+                                password = "##########")
 
 RPostgres::dbListTables(conexao)
 
