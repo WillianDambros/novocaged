@@ -458,7 +458,7 @@ novocaged_decodificado <- novocaged_decodificado |>
 # Novocaged with additional particular produce information
 
 novocaged_decodificado |> dplyr::glimpse()
-
+novocaged_decodificado$competênciamov |> unique()
 # Replacing NA with 0 in numeric variables  
 
 numeric_columns <- novocaged_decodificado |>
@@ -470,22 +470,19 @@ novocaged_decodificado <- novocaged_decodificado |>
 
 # Writing novocaged file (estudar incluir o caminho doa rquivo direto na formula)
 
-#nome_arquivo_csv <- "novocaged_decodificado"
+nome_arquivo_csv <- "novocaged"
 
-#caminho_arquivo <- paste0(stringr::str_remove(getwd(), "data$"),
-#                          nome_arquivo_csv, ".txt")
+#caminho_arquivo <- paste0(stringr::str_remove(getwd(), "data$"), nome_arquivo_csv, ".txt")
 
-#readr::write_csv2(novocaged_decodificado,
-#                  caminho_arquivo)
+#caminho_arquivo <- paste0("D:/comexstat_temporario/", nome_arquivo_csv, ".txt")
 
+#readr::write_csv2(novocaged_decodificado, caminho_arquivo)
+
+
+novocaged_decodificado$competênciamov |> unique()
 # writing PostgreSQL
 
-conexao <- RPostgres::dbConnect(RPostgres::Postgres(),
-                                dbname = "#########",
-                                host = "#########",
-                                port = "###########",
-                                user = "##########",
-                                password = "##########")
+source("X:/POWER BI/NOVOCAGED/conexao.R")
 
 RPostgres::dbListTables(conexao)
 
@@ -501,3 +498,52 @@ RPostgres::dbWriteTable(conexao,
                         row.names = FALSE, overwrite = TRUE)
 
 RPostgres::dbDisconnect(conexao)
+################################################################################
+
+endereco <- "X:/POWER BI/NOVOCAGED/estoque.xlsx"
+estoque_novocaged <- readxl::read_excel(endereco)
+
+# writing PostgreSQL
+
+source("X:/POWER BI/NOVOCAGED/conexao.R")
+
+RPostgres::dbListTables(conexao)
+
+schema_name <- "novo_caged"
+
+table_name <- "estoque_novocaged"
+
+DBI::dbSendQuery(conexao, paste0("CREATE SCHEMA IF NOT EXISTS ", schema_name))
+
+RPostgres::dbWriteTable(conexao,
+                        name = DBI::Id(schema = schema_name,table = table_name),
+                        value = estoque_novocaged,
+                        row.names = FALSE, overwrite = TRUE)
+
+RPostgres::dbDisconnect(conexao)
+
+
+ebdereco <- "X:/POWER BI/NOVOCAGED/estoque.xlsx"
+novo_caged_estoque <- readxl::read_excel(endereco)
+
+
+# writing PostgreSQL
+
+source("X:/POWER BI/NOVOCAGED/conexao.R")
+
+RPostgres::dbListTables(conexao)
+
+schema_name <- "novo_caged"
+
+table_name <- "novo_caged_estoque"
+
+DBI::dbSendQuery(conexao, paste0("CREATE SCHEMA IF NOT EXISTS ", schema_name))
+
+RPostgres::dbWriteTable(conexao,
+                        name = DBI::Id(schema = schema_name,table = table_name),
+                        value = novo_caged_estoque,
+                        row.names = FALSE, overwrite = TRUE)
+
+RPostgres::dbDisconnect(conexao)
+
+novocaged_decodificado$competênciamov |> unique()
