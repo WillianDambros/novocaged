@@ -307,7 +307,7 @@ novocaged_decodificado <- novocaged_decodificado |>
                     horascontratuais_faixa == "Mais de 14 até 39 horas" ~ 2,
                     horascontratuais_faixa == "Mais de 39 até 44 horas" ~ 3,
                     horascontratuais_faixa == "Mais de 44 até 48 horas" ~ 4,
-                    horascontratuais_faixa == "Maior de 75 anos" ~ 5
+                    horascontratuais_faixa == "Mais de 48 horas" ~ 5
                   ), .keep = "all")
 
 
