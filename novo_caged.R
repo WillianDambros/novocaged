@@ -246,7 +246,7 @@ novocaged_decodificado <- novocaged_decodificado |>
                     horascontratuais <= 39 ~ "Mais de 14 até 39 horas",
                     horascontratuais <= 44 ~ "Mais de 39 até 44 horas",
                     horascontratuais <= 48 ~ "Mais de 44 até 48 horas",
-                    horascontratuais > 48 ~ "Maior de 75 anos"
+                    horascontratuais > 48 ~ "Mais de 48 horas"
                   ), .keep = "all")
 
 # Grouping salary
@@ -547,3 +547,7 @@ RPostgres::dbWriteTable(conexao,
 RPostgres::dbDisconnect(conexao)
 
 novocaged_decodificado$competênciamov |> unique()
+
+tempdir()
+list.files(tempdir(), full.names = TRUE)
+unlink(list.files(tempdir(), full.names = TRUE), recursive = TRUE)
